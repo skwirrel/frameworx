@@ -21,6 +21,10 @@ What this module does not do
 Basic example
 -------------
 
+The following code will generate a simple cube frame as shown in the image below
+
+![Output from simple example](examples/output/cube.jpg)
+
 	var frameworx = require('./frameworx.js');
 
 	var cube = new frameworx.framework();
