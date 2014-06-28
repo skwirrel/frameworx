@@ -211,13 +211,16 @@ Rotate the framework around the X axis by the specified number of degrees. The o
 	// Close off the .STL file
 	stlFile.close();
 
+
 ### framework.rotateY() ###
 
 Same as framework.rotateX but just rotates around the Y axis
 
+
 ### framework.rotateZ() ###
 
 Same as framework.rotateX but just rotates around the Z axis
+
 
 ### framework.scale( factor ) ###
 ### framework.scale( xFactor, yFactor, zFactor ) ###
@@ -259,6 +262,7 @@ Scale's the framework out from the origin (0,0,0) i.e multiplies the x,y and z c
 
 Similar to framework.scale() above except that the framework is scaled in only one direction - basically this just sets the scale factor for the other 2 axis to 1.
 
+
 ### framework.split( [numSegments=2] ) ###
 
 This splits every stick in the framework into a number of equal length sticks. If numSegments is ommitted then all sticks are split in half (segments=2).
@@ -287,6 +291,7 @@ This method can be useful prior to calling framework.mergePoints() to allow stic
 	
 	// Close off the .STL file
 	stlFile.close();
+
 
 ### framework.mergePoints( proximity ) ###
 
@@ -320,3 +325,9 @@ The proximity parameter defines how close points have to be before they are merg
 	
 	// Close off the .STL file
 	stlFile.close();
+
+
+### framework.mergeSticks( proximity, [tolerance=0.1], [repeat=2] ) ###
+
+
+#### example ####

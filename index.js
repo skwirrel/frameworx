@@ -639,8 +639,8 @@ frame.prototype.mergePoints = function( proximity ) {
 }
 
 frame.prototype.mergeSticks = function( proximity, colinearityTolerance, repeatCount ) {
-	if (!repeatCount) repeatCount = 5;
-	if (!colinearityTolerance) colinearityTolerance = 0.1;
+	if (typeof(repeatCount)=='undefined') repeatCount = 2;
+	if (typeof(colinearityTolerance)=='undefined') colinearityTolerance = 0.1;
 
 	var self = this;
 	var numMerges=0;
