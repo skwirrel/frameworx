@@ -57,6 +57,12 @@ The following code will generate a simple cube frame as shown in the image below
 	// node cube.js && meshlab cube.stl
 
 ### examples/cubicFractalTruss.js ###
+
+Here is a more complex example to draw a cubic fractal truss. The mergeSticks routine is especially helpful here as the final shape ends up having lots of short colinear sticks.
+
+![Output from simple example](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/cube.jpg)
+
+
 ### examples/cubicFractalChain.js ###
 ### examples/octahedralFractalChain.js ###
 
