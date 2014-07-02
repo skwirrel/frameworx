@@ -29,7 +29,6 @@ function toRadians(degrees) {
 }
 
 function getVector(x,y,z) {
-	console.log('|object|array|'.indexOf(typeof(x)));
 	if ('|object|array|'.indexOf(typeof(x))>0) {
 		return x;
 	}
@@ -455,7 +454,6 @@ stick.prototype.render = function(thickness,resolution) {
 stick.prototype.translate = function(x,y,z) {
 	vector = getVector(x,y,z);
 
-	console.log(vector);
 	return new stick(
 		[this.start[0]+vector[0],this.start[1]+vector[1],this.start[2]+vector[2]],
 		[this.end[0]+vector[0],this.end[1]+vector[1],this.end[2]+vector[2]],
@@ -516,9 +514,13 @@ frame.prototype.eachMember = function(callback) {
 
 frame.prototype.length = stick.prototype.length;
 
+frame.prototype.copy = function() {
+	return this.translate(0,0,0);
+}
+
 frame.prototype.add = function(thing) {
 	if (thing.type=='frame') {
-		this.members = this.members.concat(thing.members)
+		this.members = this.members.concat(thing.copy().members);
 	} else if (thing.type=='stick') {
 		this.members.push(thing);
 	}
@@ -640,7 +642,7 @@ frame.prototype.mergePoints = function( proximity ) {
 
 frame.prototype.mergeSticks = function( proximity, colinearityTolerance, repeatCount ) {
 	if (typeof(repeatCount)=='undefined') repeatCount = 2;
-	if (typeof(colinearityTolerance)=='undefined') colinearityTolerance = 0.1;
+	if (typeof(colinearityTolerance)=='undefined') colinearityTolerance = 0.5;
 
 	var self = this;
 	var numMerges=0;
@@ -750,8 +752,10 @@ frame.prototype.layAlongX = function layAlongX() {
 
 frame.prototype.renderStl = function(stlFile, radius, resolution, printArea) {
 	this.vacuum();
+	if (typeof(radius)=='undefined') radius=0.5;
+	if (typeof(resolution)=='undefined') resolution=8;
 	
-	if (!printArea) printArea=[[],[],[]];
+	if (typeof(printArea)=='undefined') printArea=[[],[],[]];
 	var points = [[],[]];
 	var angleStep = Math.PI*2/resolution;
 	var rootTwo = Math.pow(2,0.5);
@@ -878,7 +882,7 @@ frame.prototype.renderStl = function(stlFile, radius, resolution, printArea) {
 		
 		member._writeStl(stlFile,offset);
 		
-		if (count % 1000 == 0) console.log(count);
+		// if (count % 1000 == 0) console.log(count);
 	}
 
 }
@@ -889,6 +893,10 @@ function stlFile(filename) {
 	this.buffer = new Buffer( 50 );
 	this.vertices = [];
 	this._writeHeader()
+}
+
+stlFile.prototype.render = function( framework, radius, resolution, printArea ) {
+	return framework.renderStl( this, radius, resolution, printArea );
 }
 
 stlFile.prototype._writeHeader = function( )  {
@@ -912,7 +920,7 @@ stlFile.prototype._writeFacet = function( vertices )  {
 	var offset=0;
 	for( var vertexCount=0; vertexCount<4; vertexCount++ ) {
 		for( var coordCount=0; coordCount<3; coordCount++ ) {
-			if (vertices[vertexCount][coordCount]<0) {
+			if (Math.round(vertices[vertexCount][coordCount],9)<0) {
 				console.log('Negative point encountered:',vertices[vertexCount][coordCount]);
 				return;
 			}

@@ -14,7 +14,7 @@ This module allows for the generation of 3D frameworks by placing "sticks" and b
 What this module does not do
 ----------------------------
 
-* This module cannot create any shape other than sticks.
+* This module cannot create any shape other than a framework of sticks.
 * This module doesn't properly calculate the juntion of more than one stick - it simply renders the two sticks one on top of the other. In most cases this doesn't matter as it is resovled by 3D printing / rendering software.
 * This module doesn't display any 3D - it just creates .STL files. You will need a program such as [MeshLab](http://meshlab.sourceforge.net/) to visualize the output from the resulting .STL file.
 
@@ -25,9 +25,9 @@ Examples
 
 The following code will generate a simple cube frame as shown in the image below
 
-![Output from simple example](examples/output/cube.jpg)
+![Output from simple example](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/cube.jpg)
 
-	var frameworx = require('..');
+	var frameworx = require('frameworx');
 
 	var cube = new frameworx.framework();
 
@@ -81,14 +81,30 @@ This creates an .STL file for writing a framework out to. The file is created as
 	
 	stlFile.close();
 
-stick(start, end)	
------------------
+### stlFile.render( framework, radius, resolution, printVolume ) ####
 
-This creates a single new stick. The start and end are specified as three element arrays defining X,Y and Z coordinate in Cartesian space.
+This is the corollary of framework.renderStl() (see below). Calling stlFile.render(framework) and framework.renderStl(stlFile) will have exactly the same result.
+
+#### example ####
+
+	var frameworx = require('frameworx');
+
+	... code to generate some frameworks ...
+	
+	var stlFile = new frameworx.stlFile('output.stl');
+	stlFile.render(framework1);
+	stlFile.render(framework2);
+	
+	stlFile.close();
+
+
+stick(start, end, [thickness=1])
+--------------------------------
+
+This creates a single new stick. The start and end are specified as three element arrays defining X,Y and Z coordinate in Cartesian space. The thickness specified is multiplied by the radius provided when the whole framework is finally written to the .STL file (see framework.renderStl()).
 
 Sticks can't be sent to an STL file on their own - they must be added to a framework. 
 Stick have translate, rotate and scale methods which are identical to frameworks as detailed below.
-eba
 
 #### example ####
 
@@ -147,6 +163,15 @@ framework()
 -----------
 
 A framework is a collection of sticks which can be manipulated as a single entity.
+
+### framework.add( stick ) ###
+### framework.add( framework ) ###
+
+You can add either individual sticks or whole frameworks to a framework. All of the examples below involve a call to framework.add().
+
+### framework.copy( ) ###
+
+This returns a copy of the framework - in fact all it does internally is call translate (see below) with a zero offset.
 
 ### framework.translate( offset ) ###
 ### framework.translate( offsetX, offsetY, offsetZ ) ###
@@ -329,5 +354,86 @@ The proximity parameter defines how close points have to be before they are merg
 
 ### framework.mergeSticks( proximity, [tolerance=0.1], [repeat=2] ) ###
 
+This method analyzes the framework and looks for short sticks which are joined end on end which can be merged into a single longer stick. This is the opposite of framework.split(). For some shapes generate programmatically this can dramatically reduce the number of triangles in the resulting .STL file.
+
+This method should really be called after mergePoints() has been called. The proximity parameter defines how close the ends of sticks need to be to be considered to be touching. The tolerance parameter is an angular tolerance expressed in degrees - if two sticks are less than this many degrees away from being colinear then they are merged. If there are more than 2 sticks in a line then the process used may not join all of the elements on the first pass - the repeat count defines how many times the process is run to look for sticks to merge.
 
 #### example ####
+
+	var frameworx = require('frameworx');
+
+	var theFrame = new frameworx.framework();
+
+	var theStick = new frameworx.stick([0,0,0],[10,10,10]);		
+
+	theFrame.add(theStick);
+	// add a translated copy of the stick
+	theFrame.add(theStick.translate(10.1,10,10));
+	// and another on
+	theFrame.add(theStick.translate(20,20.1,20));
+
+	// ================== MERGE STICKS ================== //
+	// Start by merging points
+	theFrame.mergePoints( 1 );
+	// Then merge the sticks
+	theFrame.mergeSticks( 1 );
+	// theFrame now contains just 1 stick from [0,0,0] to [20,20.1,20]
+
+	var stlFile = new frameworx.stlFile('output.stl');
+	
+	theFrame.renderStl(stlFile,1,8);
+	
+	// Close off the .STL file
+	stlFile.close();
+
+### framework.renderStl( stlFile, [stickRadius=0.5], [resolution=8], [printVolume] ) ###
+
+This method writes the framework to the stlFile. In this process each stick (which up to this point have just been pure lines without thickness) is replaced by a cylinder with rounded ends. As mentioned above, no attempt is made to compute the union of sticks where they intersect - they are just exported on top of each other. Where more than one stick ends at the same point, to reduce the number of triangles in the final file, only one of the ends is given a rounded top - all other ends that meet at that point are finished with flat disks. This should make no difference to the resulting shape but requires less facets in the final .STL file.
+
+The stlFile parameter should be an instance of an stlFile object (see above). The stick radius defines the radius for sticks when they are rendered - this is multiplied by the thickness of the sticks (if no thickness is specified for a stick then this defaults to 1). STL files do not support curves so the cylinders are actually rendered as prisms - the resolution parameter determines how many sides the prisms have. Higher values for resolution will result is rounder looking sticks but a much larger .STL file with many more facets.
+
+The printVolume parameter allows for the output to be cropped. This should be passed as an array of three min,max pairs i.e. [ [minX,maxX], [minY,maxY], [minZ,maxZ] ] . Any stick for which either end lies outside these bounds is not rendered in the .STL file. If printVolume is ommitted then the entire framework will be rendered.
+
+Multiple frameworks can be written to the same stlFile. STL files cannot contain any negative points so as each framework is rendered, it is checked to see if any of the points are negative. If there are any negative points then the whole framework is translated  . This also takes into account the thickness of the sticks - so even if the start and end coordinates are not negative it might be shifted a bit if the thickness would cause vertices in the resulting cylinder to be negative) .  shifted
+
+#### example ####
+
+	var frameworx = require('frameworx');
+
+	var cube = new frameworx.framework();
+
+	var stick = new frameworx.stick([0,0,0],[0,0,10]).translate([-5,-5,-5]);
+
+	// Use the basic stick and 2 rotated copies to make a U shape
+	cube.add(stick);
+	cube.add(stick.rotateX(90));
+	cube.add(stick.rotateX(-90));
+
+	// Add a rotated copy of the U shape
+	cube.add(cube.rotateZ(90));
+	// Add a rotated copy of everything we have so far - this gives us a ring of 4 U shapes - i.e. a cube
+	cube.add(cube.rotateZ(180));
+
+	// Create a new .STL to write the framework out to
+	var stlFile = new frameworx.stlFile('output/cube.stl');
+	
+	// ================== WRITE TO THE STL FILE ================== //
+	// N.B. When this first cube is rendered some of its points are negative, so it is translated automatically when it is rendered
+	cube.renderStl(stlFile,0.5,4);
+
+	// This second cube actually ends up being pretty much in the same place as the first cube because the first cube was automatically translated
+	cube = cube.translate(5,5,5);
+	cube.renderStl(stlFile,0.5,4);
+	
+	cube = cube.translate(5,5,5);
+	// The third and fourth cubes don't get translated on rendering becuase the points are all now positive
+	cube.renderStl(stlFile,1,4);
+	
+	cube = cube.translate(5,5,5);
+	cube.renderStl(stlFile,1.5,12);
+	
+	// Close off the .STL file
+	stlFile.close();
+
+	// Now run command something like this...
+	// node cube.js && meshlab output/cube.stl
