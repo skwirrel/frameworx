@@ -44,7 +44,7 @@ The following code will generate a simple cube frame as shown in the image below
 	cube.add(cube.rotateZ(180));
 
 	// Create a new .STL to write the framework out to
-	var stlFile = new frameworx.stlFile('output/cube.stl');
+	var stlFile = new frameworx.stlFile('cube.stl');
 	
 	// Actually write the framework to the .STL file
 	// All sticks will be 1mm in diameter and have 8 sides
@@ -54,8 +54,11 @@ The following code will generate a simple cube frame as shown in the image below
 	stlFile.close();
 
 	// Now run command something like this...
-	// node cube.js && meshlab output/cube.stl
+	// node cube.js && meshlab cube.stl
 
+### examples/cubicFractalTruss.js ###
+### examples/cubicFractalChain.js ###
+### examples/octahedralFractalChain.js ###
 
 Objects
 =======
