@@ -9,14 +9,43 @@ This module is designed to make it easier to write programs using node.js to gen
 What this module does
 ---------------------
 
-This module allows for the generation of 3D frameworks by placing "sticks" and by copying and manipulating sticks. It provides functions to generate new sticks by specifying start and end points, but also to translate, scale and rotate sticks or groups of sticks. Finally, the resulting framework can be written out to a binary .STL file.
+This module allows for the generation of 3D frameworks by placing "sticks" and by copying and manipulating them. It provides functions to generate new sticks by specifying start and end points, but also to translate, scale and rotate sticks or groups of sticks (frameworks). Finally, the resulting framework can be written out to a binary .STL file.
 
 What this module does not do
 ----------------------------
 
 * This module cannot create any shape other than a framework of sticks.
-* This module doesn't properly calculate the juntion of more than one stick - it simply renders the two sticks one on top of the other. In most cases this doesn't matter as it is resovled by 3D printing / rendering software.
+* This module doesn't properly calculate the juntion of more than one stick - it simply renders the two sticks one on top of the other. In most cases this doesn't matter as it is resovled by 3D printing / rendering software. This is deliberate becuase computing the intersections properly is hard work, would make the rendering much slower and would significantly increase the complexity (and thus size) of the final model.
 * This module doesn't display any 3D - it just creates .STL files. You will need a program such as [MeshLab](http://meshlab.sourceforge.net/) to visualize the output from the resulting .STL file.
+
+Get in touch
+------------
+
+If you find this module useful please do drop me a line so that I can demonstrate to my wife that I'm not wasting my time!
+
+I have written this module principally to enable me to design and print fractal trusses with a view to investigating their structural properties. If you are involved with projects which have access to 3D printers, stress testing equipment or structural analysis tools I would be happy to make any improvements or changes you require in return for help printing or otherwise investigating fractal truss designs.
+
+Please also let get in touch if you would like to help improve or develop this module.
+
+![Output from simple example](https://raw.githubusercontent.com/skwirrel/frameworx/master/authors.png)
+
+License
+---------
+
+    Copyright (C) 2014 Ben Jefferson
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Examples
 --------
@@ -60,11 +89,102 @@ The following code will generate a simple cube frame as shown in the image below
 
 Here is a more complex example to draw a cubic fractal truss. The mergeSticks routine is especially helpful here as the final shape ends up having lots of short colinear sticks.
 
-![Output from simple example](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/cube.jpg)
+![Cubic fractal truss](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/cubicFractalTruss.jpg)
+
+	// ========== CONFIGURATION ==========
+
+	// This variable determines how deep the subdivision goes and how long the members are at each level
+	// The complexity goes up exponentially with the number of levels
+	//    any more than 3 levels is likely to take a long time and fail due to lack of RAM
+	var levels = [4,4,5];
+	//Other options are...
+	// var levels = [1]; // The fundamental building block
+	// var levels = [5]; // A non-fractal version of the truss
+	// var levels = [5,5,1]; // A cube made of fractal trusses
+
+	// This is the file which the resulting stl data is written to
+	// This file will be silently overwritten if it already exists
+	var outputFilename =  'squareFractalTruss.stl';
+
+	// This is the length of the side for the fundamental building block (a cube in this case) at the deepest level
+	var stickLength = 4;
+
+	// This is the radius of the sticks used to build the truss
+	var stickRadius = 0.4;
+
+	// This is the number of sides that the sticks are drawn with
+	// More sides gives more round-looking sticks but larger file size
+	var stickResolution = 8;
+
+	// ====== END OF CONFIGURATION =======
+
+
+	// If you move this file out of the distribution directory you will need to replace the next line with...
+	// var frameworx = require('frameworx');
+	var frameworx = require('..');
+
+	var stick = new frameworx.stick([0,0,0],[stickLength,0,0]);
+
+	var trussLength = stickLength;
+
+	for ( var i = 0; i<levels.length; i++ ) {
+
+		// Create the basic building block of the truss (a cube in this case)
+		var cube = new frameworx.framework();
+		var edges = new frameworx.framework();
+		stick = stick.translate([-trussLength/2,trussLength/2,trussLength/2]);
+		edges.add(stick);
+		edges.add(stick.rotateX(90));
+		edges.add(stick.rotateX(180));
+		edges.add(stick.rotateX(270));
+		cube.add(edges);
+		cube.add(edges.rotateZ(90));
+		cube.add(edges.rotateY(90));
+		
+		truss = new frameworx.framework();
+
+		// Copy the basic building block along
+		var iterations = levels[i];
+		for( var j=0; j<iterations; j++) {
+			truss.add(cube.translate(trussLength*j,0,0));
+		}
+
+		trussLength = trussLength * (iterations-1);
+
+		// Replace the stick with the entire truss - ready to go round again
+		stick = truss;
+
+		console.log('Finished iteration: ',i+1);
+	}
+
+	// Merge nearby points - not very important in this particular instance but good practice before calling mergeSticks
+	// If the proximity is set too close to stickLength then there is a risk that the ends of individual sticks will be merged onto each other
+	console.log('Merging points');
+	stick.mergePoints(stickLength/2);
+	console.log('Merging sticks');
+	stick.mergeSticks(stickLength/2,0.1);
+
+	// Write the data out to the stl file
+	var stlFile = new frameworx.stlFile(outputFilename);
+	console.log('Writing geometry data to ',outputFilename);
+	stlFile.render(stick,stickRadius,stickResolution);
+	stlFile.close();
+
+	// Now run command something like this...
+	// node squareFractalTruss.js && meshlab squareFractalTruss.stl
 
 
 ### examples/cubicFractalChain.js ###
+
+![Output from simple example](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/cubicFractalChain.jpg)
+
+The code to generate this is very similar to that used to generate the cubic fractal truss and so is not included here. The code can be found in the examples directory.
+
 ### examples/octahedralFractalChain.js ###
+
+![Output from simple example](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/octahedralFractalChain.jpg)
+
+Once again the code required to generate this can be found in the examples directory.
 
 Objects
 =======
@@ -113,7 +233,7 @@ stick(start, end, [thickness=1])
 This creates a single new stick. The start and end are specified as three element arrays defining X,Y and Z coordinate in Cartesian space. The thickness specified is multiplied by the radius provided when the whole framework is finally written to the .STL file (see framework.renderStl()).
 
 Sticks can't be sent to an STL file on their own - they must be added to a framework. 
-Stick have translate, rotate and scale methods which are identical to frameworks as detailed below.
+Sticks have translate, rotate and scale methods which are identical to frameworks as detailed below.
 
 #### example ####
 
@@ -424,7 +544,7 @@ Multiple frameworks can be written to the same stlFile. STL files cannot contain
 	cube.add(cube.rotateZ(180));
 
 	// Create a new .STL to write the framework out to
-	var stlFile = new frameworx.stlFile('output/cube.stl');
+	var stlFile = new frameworx.stlFile('cubes.stl');
 	
 	// ================== WRITE TO THE STL FILE ================== //
 	// N.B. When this first cube is rendered some of its points are negative, so it is translated automatically when it is rendered
@@ -445,4 +565,4 @@ Multiple frameworks can be written to the same stlFile. STL files cannot contain
 	stlFile.close();
 
 	// Now run command something like this...
-	// node cube.js && meshlab output/cube.stl
+	// node cube.js && meshlab cubes.stl
