@@ -27,7 +27,7 @@ I have written this module principally to enable me to design and print fractal 
 
 Please also let get in touch if you would like to help improve or develop this module.
 
-![Output from simple example](https://raw.githubusercontent.com/skwirrel/frameworx/master/authors.png)
+skwirrel@gmail.com
 
 License
 ---------

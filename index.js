@@ -1,7 +1,7 @@
 /*
 
     Frameworx - a Node.js module for generating 3D stick frameworks (https://www.github.com/skwirrel/frameworx/)
-    Copyright (C) 2014 Ben Jefferson (see authors.png for email)
+    Copyright (C) 2014 Ben Jefferson <skwirrel@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
