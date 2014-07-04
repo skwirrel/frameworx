@@ -32,7 +32,7 @@ skwirrel@gmail.com
 License
 ---------
 
-    Copyright (C) 2014 Ben Jefferson
+    Copyright (C) 2014 Ben Jefferson <skwirrel@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -90,6 +90,8 @@ The following code will generate a simple cube frame as shown in the image below
 Here is a more complex example to draw a cubic fractal truss. The mergeSticks routine is especially helpful here as the final shape ends up having lots of short colinear sticks.
 
 ![Cubic fractal truss](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/cubicFractalTruss.jpg)
+
+[See the final model ready for printing on Shapeways](http://www.shapeways.com/model/2185805/cubic-fractal-truss-generated-by-frameworx.html?modelId=2185805&materialId=6)
 
 	// ========== CONFIGURATION ==========
 
@@ -180,11 +182,15 @@ Here is a more complex example to draw a cubic fractal truss. The mergeSticks ro
 
 The code to generate this is very similar to that used to generate the cubic fractal truss and so is not included here. The code can be found in the examples directory.
 
+[See the final model on Thingiverse](http://www.thingiverse.com/thing:384385)
+
 ### examples/octahedralFractalChain.js ###
 
 ![Output from simple example](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/octahedralFractalChain.jpg)
 
 Once again the code required to generate this can be found in the examples directory.
+
+[See the final model ready for printing on Shapeways](http://www.shapeways.com/model/2185779/octahedral-fractal-chain-generated-by-frameworx.html?modelId=2185779&materialId=6)
 
 Objects
 =======

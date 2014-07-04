@@ -31,7 +31,7 @@ var levels = [4,4,5];
 
 // This is the file which the resulting stl data is written to
 // This file will be silently overwritten if it already exists
-var outputFilename =  'squareFractalTruss.stl';
+var outputFilename =  'cubicFractalTruss.stl';
 
 // This is the length of the side for the fundamental building block (a cube in this case) at the deepest level
 var stickLength = 4;

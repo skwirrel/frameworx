@@ -1,6 +1,6 @@
 {
   "name": "frameworx",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "A node.js module for creating 3d jointed stick models",
   "main": "index.js",
   "scripts": {
