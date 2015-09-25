@@ -441,18 +441,74 @@ If the spine has previously been locked (see above) then this will unlock the sp
 
 This methods simply adds another stick to the framework starting at *framework.start* and ending at *framework.start*. If no thickness is specified then this defaults to 1. This method is useful when trying to debug problems with transformations which are sensitive to the spine (such as *framework.bend()* and *framework.twist()* ).
 
+### framework.length( ) ###
+
+Returns the length of the framework's spine.
+
 ### framework.layAlongX( ) ###
 
-Translates and rotates the framework such that the spine is oriented along the X axis. Afte this *framework.start* will always be [0,0,0] and 
+Translates and rotates the framework such that the spine is oriented along the X axis. Afte this *framework.start* will always be [0,0,0] and *framework.end* will be [*framework.length()*,0,0].
 
 ### framework.bend( degrees, [splitRatio=0.75] ) ###
 
-The entire framework is bent in a circular arc of the specified number of degrees. This works by . This function uses the framework's spine to determine the length of the framework. The framework may extend beyond the spine if desired but this will result in the observed angle of curvature being more than that specified. Similarly if the spine is defined as being longer than the actual sticks which make up the framework then the amount of visible curvature will be less.
+The entire framework is bent in a circular arc of the specified number of degrees. This works by flattening each point onto the Y-Z plane and then rotating it around the Z axis by an amount proportional to the X coordinate. Thus a point further along the X axis will be rotated more. After the bend is applied the entire framework is rotated to compensate for the bend so that rather than drooping down, the X axis is now mapped to an arch. The result is an arch which starts and ends on the X axis but goes up (in the Y direction) in the middle.
+
+If the rotation is a multiple of 360 degrees then the final framework is treated differently and is rotated such that the resulting ring is centred on the X axis.
+
+Some elements (those above the X-Z plane) will get longer after the bend, whereas other (below the X-Z plane) will get shorter. If curvature of the stick between end points is desired after the bend then they can be automatically split before the bend is applied so that there are intermediate points. The splitRatio defines the target size for the segments of the bent stick as a proportion of the original element. If this is 1 then any stick which ends up being twice as long as it was originally will be split in to two sticks each of which is as long as the original. If the split ratio is 0.5 then a stick which is twice as long once bent will be split into 4 equal segments and a stick which is the same length after bending will end up being split in two.
+
+This is probably best illustrated with some pictures. All of the images below are based around bending a square cubic truss 10 units long. The code for these can be found in examples/bentCubicTruss.js . The pictures all show the original truss together with the bent version of the truss. The line down the middle of the truss is the spine (as added by calling *truss.showSpine()* )
+
+![Bent cubic truss 180degree arch with default split ratio](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/bentCubicTruss1.jpg)
+This example shows the effect of applying this bend...
+
+    truss.bend(180).translateY(sideLength*2);
+
+Note how no splitting has occurred on the top side of the arch because none of the elements are 1.5 times their original length. This is because the first split would result in two equal segments which would have to be 0.75 times (the default value for splitRatio) the original stick length i.e. 1.5 times in total. Similarly the stick which was added to show the spine has not been split - although the end points have been moved in line bend. The arch has been translated upwards to separate the two shapes for viewing.
+
+![Bent cubic truss 180degree arch with default split ratio](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/bentCubicTruss2.jpg)
+This example shows the effect of applying this bend...
+
+    truss.bend(180,0.1).translateY(sideLength*2);
+
+In this example a fairly extreme split ratio has been applied which aims to split each member into 10. This results in a much smoother bend with each stick become bent after the bend. The spine has been split too - although the exact reduction in the length (which is comupted on the distance beteen the two transformed points - not the distance along the arc) has only been enough to result in 7 splits not 10.
+
+![Bent cubic truss 180degree arch with default split ratio](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/bentCubicTruss3.jpg)
+This example shows the effect of applying this bend...
+
+    truss.bend(360);
+    
+In this example the special logic applied to 360 degree bends has been applied and the resulting ring is now centered on the X axis. Note that the both ends of the spine end up in the same place (the little sphere hovering towards the top of the ring). The spine will have to be manually re-defined (by setting *framework.start* and *framework.end* ) if further spine-depenedent transformations are to be applied.
+
+In this instance the split ratio is not small enough to result in any splitting.
+
+![Bent cubic truss 180degree arch with default split ratio](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/bentCubicTruss4.jpg)
+This example shows the effect of applying this bend...
+
+    truss.bend(360,0.1);
+
+In this example we see the ring shape again but the smaller split ratio transforms what are straigt lines in the original shape into curves in the bent shape.
+
+#### Troubleshooting Bends ####
+
+This function uses the framework's spine to determine the length of the framework. The framework may extend beyond the spine if desired but this will result in the observed angle of curvature being more than that specified. This can be seen in the arch examples above where the base at either end of the arch is not flat but curved back in the other direction where it extends beyond the spine. Similarly if the spine is defined as being longer than the actual sticks which make up the framework then the amount of visible curvature will be less.
 
 If bending is not working as you expect then you need to check two things
 
 1. Have you defined *framework.start* and *framework.end* appropriately?
 2. Is you framework oriented along the X axis - *framework.layAlongX()* may help here.
+
+### framework.twist( degrees, [splitRatio=0.75] ) ###
+
+This works by rotating each point in the framework around the X axis by an amount propotional to the X coordinate. This function (as with the bend function) uses the spine length and the desired rotation value to determine the rate of rotation along the axis. At X=0 there will be no rotation and at X = *framework.length()* there will be *degrees* rotation.
+
+As with the bend function the line segments will be split based on the *splitRatio* specified.
+
+![Bent cubic truss 180degree arch with default split ratio](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/twistedCubicTruss1.jpg)
+
+![Bent cubic truss 180degree arch with default split ratio](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/twistedCubicTruss2.jpg)
+
+![Bent cubic truss 180degree arch with default split ratio](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/twistedCubicTruss3.jpg)
 
 ### framework.split( [numSegments=2] ) ###
 

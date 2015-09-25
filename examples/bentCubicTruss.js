@@ -27,9 +27,18 @@ truss.start = [0,0,0];
 truss.end = [sideLength*(trussLength-1),0,0];
 truss.showSpine();
 
-//truss.add(truss.bend(180).translateY(sideLength*2));
-//truss.add(truss.bend(180,0.1).translateY(sideLength*2));
+// Some examples of different parameters for the twist
+// truss.add(truss.twist(180).translateY(sideLength*2));
+// truss.add(truss.twist(180,0.1).translateY(sideLength*2));
+// truss.add(truss.twist(720).translateY(sideLength*2));
+
+// Some examples of different parameters for the bend
+// truss.add(truss.bend(180).translateY(sideLength*2));
+// truss.add(truss.bend(180,0.1).translateY(sideLength*2));
+// truss.add(truss.bend(360,0.1));
 truss.add(truss.bend(360,0.1));
+
+
 
 var stlFile = new frameworx.stlFile('output/bentCubicTruss.stl');
 truss.renderStl(stlFile,1,8);
