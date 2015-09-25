@@ -1,4 +1,4 @@
-Frameworx.js
+﻿Frameworx.js
 ============
 
 Introduction
@@ -91,7 +91,7 @@ Here is a more complex example to draw a cubic fractal truss. The mergeSticks ro
 
 ![Cubic fractal truss](https://raw.githubusercontent.com/skwirrel/frameworx/master/examples/output/cubicFractalTruss.jpg)
 
-[See the final model ready for printing on Shapeways](http://www.shapeways.com/model/2185805/cubic-fractal-truss-generated-by-frameworx.html?modelId=2185805&materialId=6)
+[See the final model ready for printing on Shapeways](http://www.shapeways.com/model/2185805)
 
 	// ========== CONFIGURATION ==========
 
@@ -183,6 +183,7 @@ Here is a more complex example to draw a cubic fractal truss. The mergeSticks ro
 The code to generate this is very similar to that used to generate the cubic fractal truss and so is not included here. The code can be found in the examples directory.
 
 [See the final model on Thingiverse](http://www.thingiverse.com/thing:384385)
+[See the final model ready for printing on Shapeways](http://www.shapeways.com/model/2185849)
 
 ### examples/octahedralFractalChain.js ###
 
@@ -190,7 +191,7 @@ The code to generate this is very similar to that used to generate the cubic fra
 
 Once again the code required to generate this can be found in the examples directory.
 
-[See the final model ready for printing on Shapeways](http://www.shapeways.com/model/2185779/octahedral-fractal-chain-generated-by-frameworx.html?modelId=2185779&materialId=6)
+[See the final model ready for printing on Shapeways](http://www.shapeways.com/model/2185779)
 
 Objects
 =======
@@ -232,6 +233,10 @@ This is the corollary of framework.renderStl() (see below). Calling stlFile.rend
 	
 	stlFile.close();
 
+
+stick(length, thickness)
+--------------------------------
+This creates a single new stick of radius *thickness* starting at the origin [0,0,0] and extending along the x axis for *length* units. 
 
 stick(start, end, [thickness=1])
 --------------------------------
@@ -422,6 +427,32 @@ Scale's the framework out from the origin (0,0,0) i.e multiplies the x,y and z c
 
 Similar to framework.scale() above except that the framework is scaled in only one direction - basically this just sets the scale factor for the other 2 axis to 1.
 
+### framework.lockSpine( ) ###
+
+The spine is the line that goes from *framework.start* to *framework.end*. This is usually transformed along with the rest of the framework i.e. if you do framework.translateY(10) the spine will be shifted up 10 along with all of the sticks in the framework. However if the spine is locked then any transformations applied to the framework will not be applied to the spine i.e. *framework.start* and *framework.end* will not be affected by any transformations.
+
+When a new framework is created the spine will always be unlocked by default.
+
+### framework.unlockSpine( ) ###
+
+If the spine has previously been locked (see above) then this will unlock the spine. Once the spine is unlock any transformations applied to the framework will also be applied to *framework.start* and *framework.end* .
+
+### framework.showSpine( [thickness=1] ) ###
+
+This methods simply adds another stick to the framework starting at *framework.start* and ending at *framework.start*. If no thickness is specified then this defaults to 1. This method is useful when trying to debug problems with transformations which are sensitive to the spine (such as *framework.bend()* and *framework.twist()* ).
+
+### framework.layAlongX( ) ###
+
+Translates and rotates the framework such that the spine is oriented along the X axis. Afte this *framework.start* will always be [0,0,0] and 
+
+### framework.bend( degrees, [splitRatio=0.75] ) ###
+
+The entire framework is bent in a circular arc of the specified number of degrees. This works by . This function uses the framework's spine to determine the length of the framework. The framework may extend beyond the spine if desired but this will result in the observed angle of curvature being more than that specified. Similarly if the spine is defined as being longer than the actual sticks which make up the framework then the amount of visible curvature will be less.
+
+If bending is not working as you expect then you need to check two things
+
+1. Have you defined *framework.start* and *framework.end* appropriately?
+2. Is you framework oriented along the X axis - *framework.layAlongX()* may help here.
 
 ### framework.split( [numSegments=2] ) ###
 
@@ -521,6 +552,55 @@ This method should really be called after mergePoints() has been called. The pro
 	// Close off the .STL file
 	stlFile.close();
 
+### framework.deduplicat( [proximity] ) ###
+
+This identifies duplicate copies of the same stick. This can arise when a more complex shape (e.g. a cubic truss) is made up from multiple copies of a simple shape (a cube). Where the simple shapes overlap then multiple identically positioned sticks can end up one on top of the other. This method removes these. If sticks have varying thicknesses then the thickest stick will be kept and any thinner ones in the same place discarded.
+
+The proximity determines how close the ends of two sticks need to be in order for the two sticks to be considered identical. If both ends are less than *proximity* away from the corresponding end of the other stick then the sticks are considered identical. If no proximity is supplied a default is derived based on one third of the length of the smallest stick in the model.
+
+#### example ####
+    var frameworx = require('..');
+    
+    var cube = new frameworx.framework();
+    
+    var sideLength = 10;
+    var stick = new frameworx.stick([0,0,0],[0,0,sideLength]).translate([-sideLength/2,-sideLength/2,-sideLength/2]);
+    
+    // Use the basic stick and 2 rotated copies to make a U shape
+    cube.add(stick);
+    cube.add(stick.rotateX(90));
+    cube.add(stick.rotateX(-90));
+    
+    // Add a rotated copy of the U shape
+    cube.add(cube.rotateZ(90));
+    // Add a rotated copy of everything we have so far - this gives us a ring of 4 U shapes - i.e. a cube
+    cube.add(cube.rotateZ(180));
+    
+    truss = new frameworx.framework();
+    
+    var trussLength = 2;
+    for( i=0; i<trussLength; i++ ) {
+    	truss.add(cube.translateX(i*sideLength));
+    }
+    
+    // Try commenting and uncommenting this line and note change in size of resulting .STL file
+    truss.deduplicate();
+    
+    var stlFile = new frameworx.stlFile('output/cubicTruss.stl');
+    truss.renderStl(stlFile,1,8);
+    stlFile.close();
+
+#### result ####
+
+    ># WITH truss.deduplicate()
+    >ls -al output/cubicTruss.stl 
+    -rw-r--r-- 1 xxxx xxxx 77684 Sep 25 16:19 output/cubicTruss.stl
+    
+    ># WITHOUT truss.deduplicate()
+    >ls -al output/cubicTruss.stl 
+    -rw-r--r-- 1 xxxx xxxx 84084 Sep 25 16:19 output/cubicTruss.stl
+    
+    
 ### framework.renderStl( stlFile, [stickRadius=0.5], [resolution=8], [printVolume] ) ###
 
 This method writes the framework to the stlFile. In this process each stick (which up to this point have just been pure lines without thickness) is replaced by a cylinder with rounded ends. As mentioned above, no attempt is made to compute the union of sticks where they intersect - they are just exported on top of each other. Where more than one stick ends at the same point, to reduce the number of triangles in the final file, only one of the ends is given a rounded top - all other ends that meet at that point are finished with flat disks. This should make no difference to the resulting shape but requires less facets in the final .STL file.
